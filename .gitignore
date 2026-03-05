@@ -1,0 +1,11 @@
+# env
+.env
+apex_bot/.env
+
+# логи и временные файлы
+logs/
+*.log
+*.csv
+
+# состояния
+state.json
