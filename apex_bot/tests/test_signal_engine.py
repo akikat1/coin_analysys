@@ -69,6 +69,24 @@ async def test_no_signal_low_balance():
 
 
 @pytest.mark.asyncio
+async def test_no_signal_max_trades_day():
+    import config, time
+    config.BACKTEST_MODE = False
+    config.MAX_TRADES_PER_DAY = 3
+    from state import RuntimeState
+    from strategy.signal_engine import evaluate_signal
+
+    ps = _make_ps(balance=1000.0)
+    ps.trades_today = 3
+    rs = RuntimeState()
+    rs.micro.last_updated_ms = int(time.time() * 1000)
+
+    result = await evaluate_signal(ps, rs)
+    assert result is None
+    assert rs.last_rejection_reason == "MAX_TRADES_DAY"
+
+
+@pytest.mark.asyncio
 async def test_reject_insufficient_margin(monkeypatch):
     import config
     import strategy.signal_engine as se

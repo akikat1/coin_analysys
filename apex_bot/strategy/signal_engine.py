@@ -170,6 +170,9 @@ async def evaluate_signal(ps: PersistentState, rs: RuntimeState) -> Signal | Non
     if ps.position is not None:
         _reject("POSITION_OPEN")
         return None
+    if ps.trades_today >= config.MAX_TRADES_PER_DAY:
+        _reject("MAX_TRADES_DAY")
+        return None
     if time.time() - ps.last_trade_close < config.SIGNAL_COOLDOWN_SEC:
         _reject("COOLDOWN")
         return None

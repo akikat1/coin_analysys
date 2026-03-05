@@ -1,12 +1,12 @@
-"""
-Telegram command loop via long polling.
-"""
+"""Telegram command loop via long polling."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
 import time
+
+import aiohttp
 
 import config
 from state import PersistentState, RuntimeState
@@ -47,7 +47,8 @@ async def _poll_once(ps: PersistentState, rs: RuntimeState) -> None:
     if _last_update_id > 0:
         params["offset"] = _last_update_id + 1
 
-    async with sess.get(url, params=params, timeout=None) as r:
+    timeout = aiohttp.ClientTimeout(total=5)
+    async with sess.get(url, params=params, timeout=timeout) as r:
         if r.status != 200:
             return
         data = await r.json(content_type=None)
@@ -73,7 +74,7 @@ async def _handle_command(cmd: str, ps: PersistentState, rs: RuntimeState) -> No
             mark = rs.micro.mark_price
             unreal = (mark - pos.avg_fill_price) * pos.qty_remaining * (1 if pos.direction == "LONG" else -1)
             await _send(
-                "📊 <b>Status</b>\n"
+                "<b>Status</b>\n"
                 f"Position: <b>{pos.direction}</b> @ {pos.avg_fill_price:.2f}\n"
                 f"Qty: {pos.qty_remaining:.4f} BTC\n"
                 f"Stop: {pos.stop_price:.2f}" + (" (BE)" if pos.tp1_filled else "") + "\n"
@@ -82,7 +83,7 @@ async def _handle_command(cmd: str, ps: PersistentState, rs: RuntimeState) -> No
             )
         else:
             await _send(
-                "📊 <b>Status</b>\n"
+                "<b>Status</b>\n"
                 "No open position\n"
                 f"Daily P&L: {ps.daily_pnl_usd:+.2f}$\n"
                 f"Balance: {ps.available_balance:.2f}$\n"
@@ -92,16 +93,21 @@ async def _handle_command(cmd: str, ps: PersistentState, rs: RuntimeState) -> No
 
     if cmd == "/close":
         if not ps.position:
-            await _send("ℹ️ No open position to close")
+            await _send("No open position to close")
             return
-        await _send("⚡ Closing position via market order...")
+        await _send("Closing position via market order...")
         try:
-            from execution.position_tracker import _close_trade
+            if config.PAPER_MODE:
+                from backtest.paper_engine import _paper_close
 
-            await _close_trade("MANUAL_CLOSE", rs.micro.mark_price, ps.position.qty_remaining, ps, rs)
-            await _send("✅ Position closed")
+                await _paper_close(ps, rs, "MANUAL_CLOSE", rs.micro.mark_price)
+            else:
+                from execution.position_tracker import _close_trade
+
+                await _close_trade("MANUAL_CLOSE", rs.micro.mark_price, ps.position.qty_remaining, ps, rs)
+            await _send("Position closed")
         except Exception as e:
-            await _send(f"❌ Close error: {type(e).__name__}: {e}")
+            await _send(f"Close error: {type(e).__name__}: {e}")
         return
 
     if cmd == "/pause":
@@ -109,7 +115,7 @@ async def _handle_command(cmd: str, ps: PersistentState, rs: RuntimeState) -> No
         import state as _state
 
         _state.save(ps)
-        await _send("⏸ Trading paused for 4 hours. Use /resume to continue")
+        await _send("Trading paused for 4 hours. Use /resume to continue")
         return
 
     if cmd == "/resume":
@@ -117,12 +123,12 @@ async def _handle_command(cmd: str, ps: PersistentState, rs: RuntimeState) -> No
         import state as _state
 
         _state.save(ps)
-        await _send("▶️ Trading resumed")
+        await _send("Trading resumed")
         return
 
     if cmd == "/report":
         await _send(
-            "📈 <b>Daily report</b>\n"
+            "<b>Daily report</b>\n"
             f"Trades: {ps.trades_today} (W:{ps.wins_today} / L:{ps.losses_today})\n"
             f"P&L: {ps.daily_pnl_usd:+.2f}$ ({ps.daily_pnl_pct * 100:+.2f}%)\n"
             f"Balance: {ps.available_balance:.2f}$\n"
@@ -150,7 +156,7 @@ async def _handle_command(cmd: str, ps: PersistentState, rs: RuntimeState) -> No
 
             if live_qty > 0:
                 await _send(
-                    f"⚠️ Exchange still has open position ({live_qty:.6f} BTC). Close it first with /close"
+                    f"Exchange still has open position ({live_qty:.6f} BTC). Close it first with /close"
                 )
                 return
 
@@ -158,14 +164,14 @@ async def _handle_command(cmd: str, ps: PersistentState, rs: RuntimeState) -> No
             import state as _state
 
             _state.save(ps)
-            await _send("✅ state reset: position=None")
+            await _send("state reset: position=None")
         except Exception as e:
-            await _send(f"❌ /reset error: {type(e).__name__}: {e}")
+            await _send(f"/reset error: {type(e).__name__}: {e}")
         return
 
     if cmd == "/help":
         await _send(
-            "🤖 <b>APEX BOT commands</b>\n\n"
+            "<b>APEX BOT commands</b>\n\n"
             "/status - current status\n"
             "/close - close current position\n"
             "/pause - pause entries for 4h\n"
@@ -176,4 +182,4 @@ async def _handle_command(cmd: str, ps: PersistentState, rs: RuntimeState) -> No
         )
         return
 
-    await _send(f"❓ Unknown command: {cmd}\nUse /help")
+    await _send(f"Unknown command: {cmd}\nUse /help")

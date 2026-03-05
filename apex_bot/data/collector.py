@@ -8,6 +8,7 @@ class CollectorState:
     candles: dict = field(default_factory=lambda: {
         "1h": deque(maxlen=200), "15m": deque(maxlen=500), "5m": deque(maxlen=500), "1m": deque(maxlen=500)})
     new_candle_flags: dict = field(default_factory=lambda: {"1h":False,"15m":False,"5m":False,"1m":False})
+    last_candle_open_time: dict = field(default_factory=lambda: {"1h":0,"15m":0,"5m":0,"1m":0})
     agg_trades: deque = field(default_factory=lambda: deque(maxlen=10000))
     order_book: dict = field(default_factory=lambda: {"bids":[], "asks":[]})
     ob_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
@@ -38,9 +39,10 @@ async def preload_candles(cs: CollectorState, symbol: str = "BTCUSDT") -> None:
                 continue
             cs.candles[tf].clear()
             for k in data:
+                open_time = int(k[0])
                 cs.candles[tf].append(
                     Candle(
-                        open_time=int(k[0]),
+                        open_time=open_time,
                         open=float(k[1]),
                         high=float(k[2]),
                         low=float(k[3]),
@@ -50,6 +52,7 @@ async def preload_candles(cs: CollectorState, symbol: str = "BTCUSDT") -> None:
                         is_closed=True,
                     )
                 )
+                cs.last_candle_open_time[tf] = open_time
             cs.new_candle_flags[tf] = True
             loaded[tf] = len(data)
         except Exception as e:
@@ -111,10 +114,14 @@ async def _dispatch(data: dict, cs: CollectorState):
     if "kline" in stream:
         k = ev["k"]; tf = k.get("i")
         if tf in cs.candles and k["x"]:
+            open_time = int(k["t"])
+            if open_time <= int(cs.last_candle_open_time.get(tf, 0) or 0):
+                return
             cs.candles[tf].append(Candle(
-                open_time=k["t"], open=float(k["o"]), high=float(k["h"]),
+                open_time=open_time, open=float(k["o"]), high=float(k["h"]),
                 low=float(k["l"]), close=float(k["c"]), volume=float(k["v"]),
                 close_time=k["T"], is_closed=True))
+            cs.last_candle_open_time[tf] = open_time
             cs.new_candle_flags[tf] = True
     elif "aggTrade" in stream:
         cs.agg_trades.append(AggTrade(

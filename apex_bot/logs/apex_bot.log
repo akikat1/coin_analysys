@@ -2170,3 +2170,50 @@ connector: <aiohttp.connector.TCPConnector object at 0x000002D6B09112B0>
 2026-03-05 19:51:25,793 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
 2026-03-05 19:51:25,979 [INFO] root: Fear&Greed: 22 (Extreme Fear)
 2026-03-05 19:54:35,674 [INFO] root: Live бот остановлен.
+2026-03-05 19:57:48,207 [INFO] root: AI advisor: enabled mode=hybrid provider=auto min_base=58.0 cooldown=2s fail_open=True candidates=22 [gemini/gemini-3.1-pro-preview, gemini/gemini-3.1-flash-lite-preview, gemini/gemini-3-pro-preview, +19 more]
+2026-03-05 19:57:48,207 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 19:57:50,077 [INFO] root: server time synced: offset=-1382ms
+2026-03-05 19:57:50,442 [INFO] root: One-Way Mode: already set
+2026-03-05 19:57:50,804 [INFO] root: ISOLATED: already set
+2026-03-05 19:57:51,171 [INFO] root: Leverage set: 10x
+2026-03-05 19:57:52,429 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 19:57:53,919 [WARNING] root: Rate limit (1189/1100), wait 60.3s
+2026-03-05 19:58:57,289 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 19:58:58,513 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 19:59:00,368 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 20:00:12,216 [INFO] root: Leverage set: 10x
+2026-03-05 20:00:12,218 [INFO] root: LIMIT entry: side=BUY qty=0.014000 price=72546.50 timeout=8s
+2026-03-05 20:00:21,319 [INFO] root: Лимитный ордер истёк, переключаюсь на рыночный
+2026-03-05 20:00:22,500 [WARNING] root: Binance API -4120: Order type not supported for this endpoint. Please use the Algo Order API endpoints instead.
+2026-03-05 20:00:22,852 [WARNING] root: Binance API -4120: Order type not supported for this endpoint. Please use the Algo Order API endpoints instead.
+2026-03-05 20:00:22,853 [INFO] root: LIVE ВХОД LONG @ 72603.00 qty=0.0140 conf=58 RR=2.00
+2026-03-05 20:03:59,281 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 20:07:38,991 [INFO] root: Live бот остановлен.
+2026-03-05 20:07:56,353 [INFO] root: AI advisor: enabled mode=hybrid provider=auto min_base=58.0 cooldown=2s fail_open=True candidates=22 [gemini/gemini-3.1-pro-preview, gemini/gemini-3.1-flash-lite-preview, gemini/gemini-3-pro-preview, +19 more]
+2026-03-05 20:07:56,354 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 20:07:59,003 [INFO] root: server time synced: offset=-1419ms
+2026-03-05 20:07:59,404 [INFO] root: One-Way Mode: already set
+2026-03-05 20:07:59,815 [INFO] root: ISOLATED: already set
+2026-03-05 20:08:00,723 [INFO] root: Leverage set: 10x
+2026-03-05 20:08:01,612 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 20:08:02,015 [INFO] root: position_sync: OK LONG qty=0.0140
+2026-03-05 20:08:02,405 [WARNING] root: Binance API -4120: Order type not supported for this endpoint. Please use the Algo Order API endpoints instead.
+2026-03-05 20:08:02,406 [INFO] root: 🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: LONG @ 72561.0
+2026-03-05 20:08:05,733 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 20:08:06,829 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 20:08:07,203 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 20:08:07,204 [CRITICAL] root: DEADMAN_SWITCH triggered: stale_ms=1772723287203 > 15s
+2026-03-05 20:08:07,747 [INFO] root: ЗАКРЫТО [DEADMAN_SWITCH] @ 72172.30  net=-7.25$
+2026-03-05 20:08:07,749 [WARNING] root: SQLite logging disabled: install aiosqlite
+2026-03-05 20:11:55,194 [INFO] root: Live бот остановлен.
+2026-03-05 20:12:39,239 [INFO] root: AI advisor: enabled mode=hybrid provider=auto min_base=58.0 cooldown=2s fail_open=True candidates=22 [gemini/gemini-3.1-pro-preview, gemini/gemini-3.1-flash-lite-preview, gemini/gemini-3-pro-preview, +19 more]
+2026-03-05 20:12:39,239 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 20:12:41,906 [INFO] root: server time synced: offset=-1425ms
+2026-03-05 20:12:42,699 [INFO] root: One-Way Mode: already set
+2026-03-05 20:12:43,106 [INFO] root: ISOLATED: already set
+2026-03-05 20:12:43,512 [INFO] root: Leverage set: 10x
+2026-03-05 20:12:44,029 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 20:12:52,669 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 20:12:53,738 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 20:12:53,993 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 20:13:09,588 [INFO] root: Live бот остановлен.

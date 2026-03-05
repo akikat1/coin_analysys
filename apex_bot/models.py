@@ -1,4 +1,5 @@
 from __future__ import annotations
+import dataclasses
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -104,9 +105,11 @@ class ScoreBreakdown:
 
     def to_str(self) -> str:
         parts = []
-        for field_name, val in vars(self).items():
+        for f in dataclasses.fields(self):
+            field_name = f.name
             if field_name in ("direction", "total", "ai_decision", "ai_reason"):
                 continue
+            val = getattr(self, field_name)
             if isinstance(val, float) and val != 0.0:
                 parts.append(f"{field_name}={val:+.0f}")
         if self.ai_decision:
