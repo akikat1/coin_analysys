@@ -88,8 +88,18 @@ async def run_paper_signal_loop(ps: PersistentState, rs: RuntimeState, cs) -> No
                           ind15.volume_ratio if ind15 and ind15.volume_ratio else 0,
                           rs.sentiment.value if rs.sentiment.available else -1,
                           rs.last_score_breakdown.to_str() if rs.last_score_breakdown else "")
-            logging.info(f"PAPER ВХОД {sig.direction} @ {sig.levels.entry:.2f} "
-                         f"conf={sig.confidence:.0f} RR={sig.levels.rr:.2f}")
+            score_final = float(sig.confidence)
+            score_ai_delta = (
+                float(rs.last_score_breakdown.ai_adjustment)
+                if rs.last_score_breakdown is not None
+                else 0.0
+            )
+            score_base = score_final - score_ai_delta
+            logging.info(
+                f"PAPER ENTRY {sig.direction} @ {sig.levels.entry:.2f} "
+                f"base_score={score_base:.1f} final_score={score_final:.1f} "
+                f"(AI{score_ai_delta:+.1f}) RR={sig.levels.rr:.2f}"
+            )
         else:
             rejection = rs.last_rejection_reason or "NO_SIGNAL"
             lg.log_signal(rejection, 0, 0, 0, 0, False, rejection,

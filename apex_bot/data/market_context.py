@@ -11,6 +11,9 @@ _cached_oi_signal: str = "NEUTRAL"
 _cached_ls_ratio: float = 0.5
 _cached_ls_warning: bool = False
 _ls_skip_warned: bool = False
+_ls_fail_count: int = 0
+_ls_permanently_disabled: bool = False
+_ls_disabled_warned: bool = False
 
 
 async def update(rs, cs) -> None:
@@ -66,7 +69,8 @@ def _build_regime(ind: Indicators | None, funding_rate: float) -> MarketContext:
 
 
 async def _enrich(ctx: MarketContext) -> MarketContext:
-    global _last_enrich_ts, _cached_oi_signal, _cached_ls_ratio, _cached_ls_warning, _ls_skip_warned
+    global _last_enrich_ts, _cached_oi_signal, _cached_ls_ratio, _cached_ls_warning
+    global _ls_skip_warned, _ls_fail_count, _ls_permanently_disabled, _ls_disabled_warned
 
     now = time.time()
     if now - _last_enrich_ts < config.MARKET_CONTEXT_REFRESH_SEC:
@@ -100,6 +104,8 @@ async def _enrich(ctx: MarketContext) -> MarketContext:
         if not _ls_skip_warned:
             logging.info("L/S ratio skipped on TESTNET (endpoint unavailable)")
             _ls_skip_warned = True
+    elif _ls_permanently_disabled:
+        pass
     else:
         try:
             ls = await _request(
@@ -109,13 +115,22 @@ async def _enrich(ctx: MarketContext) -> MarketContext:
                 signed=False,
                 weight=1,
             )
-            if ls and isinstance(ls, list) and ls:
-                la = float(ls[0]["longAccount"])
-                sa = float(ls[0]["shortAccount"])
-                ctx.ls_ratio = la / (la + sa) if (la + sa) > 0 else 0.5
-                ctx.ls_warning = ctx.ls_ratio > 0.72 or ctx.ls_ratio < 0.28
+            if not isinstance(ls, list) or not ls:
+                raise ValueError("empty or invalid L/S response")
+            la = float(ls[0]["longAccount"])
+            sa = float(ls[0]["shortAccount"])
+            ctx.ls_ratio = la / (la + sa) if (la + sa) > 0 else 0.5
+            ctx.ls_warning = ctx.ls_ratio > 0.72 or ctx.ls_ratio < 0.28
+            _ls_fail_count = 0
         except Exception as e:
-            logging.warning(f"L/S: {e}")
+            _ls_fail_count += 1
+            if _ls_fail_count >= 3:
+                _ls_permanently_disabled = True
+                if not _ls_disabled_warned:
+                    logging.warning("L/S ratio endpoint disabled after 3 failures")
+                    _ls_disabled_warned = True
+            else:
+                logging.warning("L/S: %s (failure %s/3)", e, _ls_fail_count)
 
     _last_enrich_ts = now
     _cached_oi_signal = ctx.oi_signal

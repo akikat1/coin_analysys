@@ -75,8 +75,18 @@ async def enter_trade(sig: Signal, ps: PersistentState, rs: RuntimeState) -> Pos
                             ind15.volume_ratio if ind15 and ind15.volume_ratio else 0,
                             rs.sentiment.value if rs.sentiment.available else -1,
                             rs.last_score_breakdown.to_str() if rs.last_score_breakdown else "")
-    logging.info(f"LIVE ВХОД {sig.direction} @ {avg_fill:.2f} qty={filled_qty:.4f} "
-                 f"conf={sig.confidence:.0f} RR={lvl.rr:.2f}")
+    score_final = float(sig.confidence)
+    score_ai_delta = (
+        float(rs.last_score_breakdown.ai_adjustment)
+        if rs.last_score_breakdown is not None
+        else 0.0
+    )
+    score_base = score_final - score_ai_delta
+    logging.info(
+        f"LIVE ENTRY {sig.direction} @ {avg_fill:.2f} qty={filled_qty:.4f} "
+        f"base_score={score_base:.1f} final_score={score_final:.1f} "
+        f"(AI{score_ai_delta:+.1f}) RR={lvl.rr:.2f}"
+    )
     return pos
 
 async def cancel_order(order_id: int) -> None:

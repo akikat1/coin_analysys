@@ -1,10 +1,48 @@
 # ПРАВИЛО: везде "import config; config.X" — НЕ "from config import X"
 # Требуется Python 3.11+
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
 _g = os.getenv
+
+
+def _parse_avoid_hours(raw: str) -> list[tuple[int, int]]:
+    windows: list[tuple[int, int]] = []
+    text = (raw or "").strip()
+    if not text:
+        return [(2, 5)]
+
+    for chunk in re.split(r"[;,]", text):
+        part = chunk.strip()
+        if not part:
+            continue
+
+        if "-" in part:
+            left, right = part.split("-", 1)
+        elif ":" in part:
+            left, right = part.split(":", 1)
+        else:
+            continue
+
+        try:
+            h_from = int(float(left.strip()))
+            h_to = int(float(right.strip()))
+        except Exception:
+            continue
+
+        h_from = max(0, min(23, h_from))
+        h_to = max(0, min(23, h_to))
+
+        if h_from <= h_to:
+            windows.append((h_from, h_to))
+        else:
+            # Cross-midnight window, e.g. 22-2 -> (22,23) + (0,2).
+            windows.append((h_from, 23))
+            windows.append((0, h_to))
+
+    return windows or [(2, 5)]
 
 BINANCE_API_KEY = _g("BINANCE_API_KEY", "")
 BINANCE_API_SECRET = _g("BINANCE_API_SECRET", "")
@@ -49,7 +87,7 @@ USE_LIMIT_ORDER = _g("USE_LIMIT_ORDER", "true").lower() in ("true", "1", "yes")
 LIMIT_ORDER_OFFSET_PCT = float(_g("LIMIT_ORDER_OFFSET_PCT", "0.0002"))
 LIMIT_ORDER_TIMEOUT_SEC = int(float(_g("LIMIT_ORDER_TIMEOUT_SEC", "8")))
 PARTIAL_FILL_MIN_PCT = 0.5
-AVOID_HOURS_UTC = [(2, 5)]
+AVOID_HOURS_UTC = _parse_avoid_hours(_g("AVOID_HOURS_UTC", "2-5"))
 
 TRAILING_STOP_ENABLED = _g("TRAILING_STOP_ENABLED", "true").lower() in ("true", "1", "yes")
 TRAILING_ATR_MULTIPLIER = float(_g("TRAILING_ATR_MULTIPLIER", "1.2"))
