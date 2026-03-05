@@ -81,3 +81,31 @@ async def test_sync_ok_when_consistent(monkeypatch):
     assert ps.position is not None
     assert ps.position.direction == "LONG"
 
+
+@pytest.mark.asyncio
+async def test_sync_creates_protective_stop_on_restore(monkeypatch):
+    """If exchange has a position and no open orders, sync should create a STOP order."""
+    from state import PersistentState
+
+    ps = PersistentState(available_balance=1000.0)
+    calls = {"stop_created": 0}
+
+    async def mock_request(method, path, params=None, **kw):
+        if "positionRisk" in path:
+            return [{"symbol": "BTCUSDT", "positionAmt": "0.01", "entryPrice": "50000.0"}]
+        if "openOrders" in path:
+            return []
+        if path == "/fapi/v1/order" and method == "POST":
+            calls["stop_created"] += 1
+            return {"orderId": 777}
+        return {}
+
+    monkeypatch.setattr("data.rest_client._request", mock_request)
+
+    from execution.position_sync import sync_on_startup
+
+    await sync_on_startup(ps)
+    assert ps.position is not None
+    assert ps.position.stop_order_id == 777
+    assert calls["stop_created"] == 1
+

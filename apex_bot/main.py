@@ -9,12 +9,12 @@ APEX Scalping Bot v12 — точка входа.
 """
 import argparse
 import asyncio
-import importlib
 import os
 import signal
 import sys
 import time
 from datetime import datetime, timezone
+from dotenv import dotenv_values
 
 # Для Windows-консоли с cp1251: принудительно UTF-8, чтобы логгер не падал на emoji/символах.
 for _stream in (sys.stdout, sys.stderr):
@@ -91,19 +91,31 @@ def _maybe_reset_daily(ps) -> None:
         ps.daily_reset_date = today
         logging.info(f"📅 Новый торговый день: {today} — статистика сброшена")
 
-def _reload_config_keep_mode() -> None:
-    old_paper = config.PAPER_MODE
-    old_backtest = config.BACKTEST_MODE
-    importlib.reload(config)
-    config.PAPER_MODE = old_paper
-    config.BACKTEST_MODE = old_backtest
+HOT_RELOAD_FIELDS = ("MIN_CONFIDENCE", "MAX_RISK_PER_TRADE_PCT", "MAX_DAILY_LOSS_PCT")
+STOP_TRADING_FILE = "STOP_TRADING"
+
+def _kill_switch_triggered() -> bool:
+    return os.path.exists(STOP_TRADING_FILE)
+
+def _apply_hot_reload_subset(env_path: str) -> dict[str, tuple[float, float]]:
+    values = dotenv_values(env_path)
+    changed: dict[str, tuple[float, float]] = {}
+    for field in HOT_RELOAD_FIELDS:
+        raw = values.get(field)
+        if raw is None or raw == "":
+            continue
+        try:
+            new_val = float(raw)
+            old_val = float(getattr(config, field))
+        except Exception:
+            continue
+        if old_val != new_val:
+            setattr(config, field, new_val)
+            changed[field] = (old_val, new_val)
+    return changed
 
 async def run_config_hot_reload_loop(stop_event: asyncio.Event) -> None:
-    """
-    Hot reload config:
-    - Linux/macOS: SIGHUP
-    - Windows: polling mtime файла .env
-    """
+    """Hot reload for a restricted field set."""
     env_path = ".env"
     last_mtime = os.path.getmtime(env_path) if os.path.exists(env_path) else 0.0
     reload_event = asyncio.Event()
@@ -121,12 +133,20 @@ async def run_config_hot_reload_loop(stop_event: asyncio.Event) -> None:
                 current_mtime = os.path.getmtime(env_path)
                 if current_mtime != last_mtime:
                     last_mtime = current_mtime
-                    _reload_config_keep_mode()
-                    logging.info("HOT RELOAD: .env обновлён, config перезагружен")
+                    changed = _apply_hot_reload_subset(env_path)
+                    if changed:
+                        patch = ", ".join(
+                            f"{k}:{old:.4g}->{new:.4g}" for k, (old, new) in changed.items()
+                        )
+                        logging.info("HOT RELOAD: applied %s", patch)
             if reload_event.is_set():
                 reload_event.clear()
-                _reload_config_keep_mode()
-                logging.info("HOT RELOAD: получен SIGHUP, config перезагружен")
+                changed = _apply_hot_reload_subset(env_path)
+                if changed:
+                    patch = ", ".join(
+                        f"{k}:{old:.4g}->{new:.4g}" for k, (old, new) in changed.items()
+                    )
+                    logging.info("HOT RELOAD (SIGHUP): applied %s", patch)
         except Exception as e:
             logging.warning(f"hot_reload: {e}")
         await asyncio.sleep(2.0)
@@ -141,6 +161,37 @@ def _open_report_file(path: str) -> None:
             os.system(f'xdg-open "{path}" >/dev/null 2>&1 &')
     except Exception as e:
         logging.warning(f"Не удалось открыть отчёт автоматически: {e}")
+
+def _calc_reconnect_delay(base_delay_sec: int, attempt: int) -> int:
+    base = max(1, int(base_delay_sec))
+    return min(base * (2 ** max(attempt - 1, 0)), 60)
+
+
+def _log_ai_startup_status() -> None:
+    if not config.AI_ENABLED:
+        logging.info("AI advisor: disabled (AI_ENABLED=false)")
+        return
+    try:
+        from strategy.ai_advisor import _build_candidates
+
+        candidates = _build_candidates()
+        preview = ", ".join(f"{c.provider}/{c.model}" for c in candidates[:3])
+        if len(candidates) > 3:
+            preview = f"{preview}, +{len(candidates) - 3} more"
+        logging.info(
+            "AI advisor: enabled mode=%s provider=%s min_base=%.1f cooldown=%ss fail_open=%s candidates=%s [%s]",
+            config.AI_MODE,
+            config.AI_PROVIDER,
+            config.AI_MIN_BASE_SCORE,
+            config.AI_MIN_CALL_INTERVAL_SEC,
+            config.AI_FAIL_OPEN,
+            len(candidates),
+            preview or "none",
+        )
+        if not candidates:
+            logging.warning("AI advisor: enabled but no valid provider/key/model candidates found")
+    except Exception as e:
+        logging.warning("AI advisor startup check failed: %s", e)
 
 async def run_backtest(days: int) -> None:
     import config
@@ -187,6 +238,7 @@ async def run_paper() -> None:
     from data.rest_client import close as close_rest_session, get_session, sync_server_time
     from data.sentiment import run_sentiment_loop
     from execution import exchange_info
+    from execution.position_tracker import maybe_close_deadman_position, maybe_close_expired_position
     from backtest.paper_engine import run_paper_signal_loop
     from monitor.dashboard import run as run_dashboard
     from monitor.notifier import send_startup
@@ -209,20 +261,33 @@ async def run_paper() -> None:
     async def signal_loop():
         while not stop_event.is_set():
             try:
+                if _kill_switch_triggered():
+                    logging.warning("Kill switch detected (%s). Stopping.", STOP_TRADING_FILE)
+                    stop_event.set()
+                    continue
                 _maybe_reset_daily(ps)
                 await run_paper_signal_loop(ps, rs, cs)
+                if await maybe_close_deadman_position(ps, rs):
+                    continue
+                await maybe_close_expired_position(ps, rs)
             except Exception as e:
                 logging.error(f"signal_loop: {e}", exc_info=True)
             await asyncio.sleep(1.0)
 
     async def ws_loop():
+        attempt = 0
         while not stop_event.is_set():
+            started = time.monotonic()
             try:
                 await run_market_stream(cs)
             except Exception as e:
                 logging.warning(f"WS reco: {e}")
+            uptime = time.monotonic() - started
+            attempt = 0 if uptime >= 15 else (attempt + 1)
             if not stop_event.is_set():
-                await asyncio.sleep(config.WS_RECONNECT_DELAY_SEC)
+                delay = _calc_reconnect_delay(config.WS_RECONNECT_DELAY_SEC, attempt)
+                logging.info("WS reconnect in %ss (attempt=%s)", delay, attempt)
+                await asyncio.sleep(delay)
 
     sess = await get_session()
     await send_startup("paper", ps.available_balance,
@@ -270,7 +335,12 @@ async def run_live() -> None:
     from data.sentiment import run_sentiment_loop
     from execution import exchange_info, exchange_setup
     from execution.position_sync import sync_on_startup
-    from execution.position_tracker import handle_queue_event, update_trailing_stop
+    from execution.position_tracker import (
+        handle_queue_event,
+        maybe_close_deadman_position,
+        maybe_close_expired_position,
+        update_trailing_stop,
+    )
     from strategy.signal_engine import evaluate_signal
     from execution.order_manager import enter_trade, run_smoke_test_trade
     from monitor.dashboard import run as run_dashboard
@@ -318,6 +388,10 @@ async def run_live() -> None:
     async def signal_loop():
         while not stop_event.is_set():
             try:
+                if _kill_switch_triggered():
+                    logging.warning("Kill switch detected (%s). Stopping.", STOP_TRADING_FILE)
+                    stop_event.set()
+                    continue
                 _maybe_reset_daily(ps)
                 for tf in ("1h", "15m", "5m", "1m"):
                     min_len = config.HTF_MIN_CANDLES if tf == "1h" else 50
@@ -327,6 +401,10 @@ async def run_live() -> None:
                 rs.micro = cs.micro
                 if rs.indicators.get("15m"):
                     await update_market_context(rs, cs)
+                if await maybe_close_deadman_position(ps, rs):
+                    continue
+                if await maybe_close_expired_position(ps, rs):
+                    continue
                 if ps.position and ps.position.tp1_filled:
                     await update_trailing_stop(ps, rs)
                 if not ps.position:
@@ -365,18 +443,34 @@ async def run_live() -> None:
                 logging.error(f"order_queue: {e}", exc_info=True)
 
     async def ws_loop():
+        attempt = 0
         while not stop_event.is_set():
-            try: await run_market_stream(cs)
-            except Exception as e: logging.warning(f"market WS: {e}")
+            started = time.monotonic()
+            try:
+                await run_market_stream(cs)
+            except Exception as e:
+                logging.warning(f"market WS: {e}")
+            uptime = time.monotonic() - started
+            attempt = 0 if uptime >= 15 else (attempt + 1)
             if not stop_event.is_set():
-                await asyncio.sleep(config.WS_RECONNECT_DELAY_SEC)
+                delay = _calc_reconnect_delay(config.WS_RECONNECT_DELAY_SEC, attempt)
+                logging.info("Market WS reconnect in %ss (attempt=%s)", delay, attempt)
+                await asyncio.sleep(delay)
 
     async def user_ws_loop():
+        attempt = 0
         while not stop_event.is_set():
-            try: await run_user_stream(cs)
-            except Exception as e: logging.warning(f"user WS: {e}")
+            started = time.monotonic()
+            try:
+                await run_user_stream(cs)
+            except Exception as e:
+                logging.warning(f"user WS: {e}")
+            uptime = time.monotonic() - started
+            attempt = 0 if uptime >= 15 else (attempt + 1)
             if not stop_event.is_set():
-                await asyncio.sleep(config.WS_RECONNECT_DELAY_SEC)
+                delay = _calc_reconnect_delay(config.WS_RECONNECT_DELAY_SEC, attempt)
+                logging.info("User WS reconnect in %ss (attempt=%s)", delay, attempt)
+                await asyncio.sleep(delay)
 
     sess = await get_session()
     await send_startup("live", ps.available_balance,
@@ -411,6 +505,7 @@ async def main():
     args = parse_args()
     if not await startup_check(args.mode):
         sys.exit(1)
+    _log_ai_startup_status()
     logging.info(f"=== APEX BOT v12 | режим: {args.mode} ===")
     if   args.mode == "backtest":    await run_backtest(args.days)
     elif args.mode == "walkforward": await run_walkforward(args.days)
@@ -422,4 +517,3 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         logging.info("Остановлен по Ctrl+C")
-

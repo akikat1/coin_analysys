@@ -25,10 +25,15 @@ def calculate_levels(entry: float, direction: str, atr: float,
     qty=exchange_info.round_qty(qty_raw)
     if qty<=0 or not exchange_info.validate(entry,qty): return None
     qt1=exchange_info.round_qty(qty*0.40); qt2=exchange_info.round_qty(qty*0.35)
-    qt3=exchange_info.round_qty(qty-qt1-qt2)
-    if qt3<=0: qt3=exchange_info.step_size
+    # Keep TP split bounded by total qty after exchange rounding.
+    qt3=exchange_info.round_qty(max(0.0, qty-qt1-qt2))
+    if qt3<=0:
+        qt2 = exchange_info.round_qty(max(0.0, qty-qt1))
+        qt3 = exchange_info.round_qty(max(0.0, qty-qt1-qt2))
+    if qt3<=0:
+        return None
     return TradeLevel(entry=entry,stop=stop,tp1=tp1,tp2=tp2,tp3=tp3,
                       qty_btc=qty,qty_tp1=qt1,qty_tp2=qt2,qty_tp3=qt3,
                       notional_usd=qty*entry,margin_usd=(qty*entry)/lev,
-                      rr=rr,stop_dist_pct=stop_dist_pct)
+                      rr=rr,stop_dist_pct=stop_dist_pct, leverage=lev)
 

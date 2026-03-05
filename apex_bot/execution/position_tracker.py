@@ -139,6 +139,80 @@ async def _handle_liquidation(liq_price: float, ps: PersistentState, rs: Runtime
     ps.position = None; ps.consecutive_losses += 1; ps.losses_today += 1
     import state; state.save(ps)
 
+async def maybe_close_expired_position(ps: PersistentState, rs: RuntimeState) -> bool:
+    """Close stale position when hold time exceeds config.MAX_POSITION_DURATION_SEC."""
+    pos = ps.position
+    if not pos:
+        return False
+    if config.MAX_POSITION_DURATION_SEC <= 0 or pos.open_timestamp_ms <= 0:
+        return False
+
+    age_sec = (int(time.time() * 1000) - pos.open_timestamp_ms) / 1000.0
+    if age_sec < config.MAX_POSITION_DURATION_SEC:
+        return False
+
+    exit_price = rs.micro.mark_price if rs.micro.mark_price > 0 else pos.avg_fill_price
+    logging.warning(
+        "MAX_POSITION_DURATION reached: age=%.0fs limit=%ss, forcing close",
+        age_sec,
+        config.MAX_POSITION_DURATION_SEC,
+    )
+    await _close_trade("MAX_POSITION_DURATION", exit_price, pos.qty_remaining, ps, rs)
+    return True
+
+async def maybe_close_deadman_position(ps: PersistentState, rs: RuntimeState) -> bool:
+    """
+    Dead man's switch:
+    if microstructure feed is stale for too long while a position is open,
+    force a protective market close.
+    """
+    pos = ps.position
+    if not pos:
+        return False
+    if config.DEADMAN_SWITCH_SEC <= 0:
+        return False
+
+    stale_ms = int(time.time() * 1000) - rs.micro.last_updated_ms
+    if stale_ms < config.DEADMAN_SWITCH_SEC * 1000:
+        return False
+
+    logging.critical(
+        "DEADMAN_SWITCH triggered: stale_ms=%s > %ss",
+        stale_ms,
+        config.DEADMAN_SWITCH_SEC,
+    )
+
+    if config.PAPER_MODE:
+        exit_price = rs.micro.mark_price if rs.micro.mark_price > 0 else pos.avg_fill_price
+        await _close_trade("DEADMAN_SWITCH", exit_price, pos.qty_remaining, ps, rs)
+        return True
+
+    from data import rest_client
+    from execution import exchange_info
+
+    close_side = "SELL" if pos.direction == "LONG" else "BUY"
+    qty = exchange_info.round_qty(pos.qty_remaining)
+    if qty <= 0:
+        return False
+
+    close_r = await rest_client._request("POST", "/fapi/v1/order", {
+        "symbol": config.SYMBOL,
+        "side": close_side,
+        "type": "MARKET",
+        "quantity": qty,
+        "reduceOnly": "true",
+        "newOrderRespType": "RESULT",
+    })
+    if not close_r or "orderId" not in close_r:
+        logging.critical("DEADMAN_SWITCH: emergency close order failed")
+        return False
+
+    fill_price = float(close_r.get("avgPrice", 0) or 0)
+    if fill_price <= 0:
+        fill_price = rs.micro.mark_price if rs.micro.mark_price > 0 else pos.avg_fill_price
+    await _close_trade("DEADMAN_SWITCH", fill_price, pos.qty_remaining, ps, rs)
+    return True
+
 async def update_trailing_stop(ps: PersistentState, rs: RuntimeState) -> None:
     """
     v13: подтягивает stop после TP1 на основе ATR.

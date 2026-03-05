@@ -50,6 +50,7 @@ def _patch_common(monkeypatch):
         margin_usd=10.0,
         rr=2.0,
         stop_dist_pct=0.01,
+        leverage=10,
     )
     monkeypatch.setattr(se.risk_manager, "calculate_levels", lambda **kwargs: level)
     monkeypatch.setattr(se.fee_calculator, "is_tp1_profitable", lambda *args, **kwargs: True)
@@ -188,3 +189,21 @@ async def test_ai_hybrid_can_apply_delta_and_pass(monkeypatch):
     assert rs.last_score_breakdown is not None
     assert rs.last_score_breakdown.ai_adjustment == pytest.approx(5.0, abs=1e-6)
     assert rs.last_score_breakdown.ai_decision == "ALLOW"
+
+
+@pytest.mark.asyncio
+async def test_pre_ai_reject_sets_ai_skip_note(monkeypatch):
+    import config
+    import strategy.signal_engine as se
+
+    monkeypatch.setattr(config, "BACKTEST_MODE", True)
+    monkeypatch.setattr(config, "MIN_BALANCE_USD", 2000.0)
+    monkeypatch.setattr(config, "AI_ENABLED", True)
+
+    ps = _make_ps()
+    rs = _make_rs()
+    result = await se.evaluate_signal(ps, rs)
+
+    assert result is None
+    assert rs.last_rejection_reason == "LOW_BALANCE"
+    assert rs.last_ai_note == "AI skip before signal: LOW_BALANCE"

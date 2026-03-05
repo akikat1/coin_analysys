@@ -181,3 +181,50 @@ async def test_ai_consensus_reached_returns_block(monkeypatch):
     assert advice.decision == "BLOCK"
     assert advice.reason == "block_1"
     assert "block_consensus" in rs.last_ai_note.lower()
+
+
+@pytest.mark.asyncio
+async def test_ai_skip_note_when_base_score_too_low(monkeypatch):
+    import config
+    import strategy.ai_advisor as aa
+    from state import RuntimeState
+
+    monkeypatch.setattr(config, "AI_ENABLED", True)
+    monkeypatch.setattr(config, "BACKTEST_MODE", False)
+    monkeypatch.setattr(config, "AI_BACKTEST_ENABLED", False)
+    monkeypatch.setattr(config, "AI_MIN_BASE_SCORE", 80.0)
+
+    rs = RuntimeState()
+    advice = await aa.get_trade_advice("LONG", 70.0, rs, None, "BULL")
+
+    assert advice is None
+    assert "AI skip: base 70.0 < min 80.0" == rs.last_ai_note
+
+
+@pytest.mark.asyncio
+async def test_ai_skip_note_on_cooldown(monkeypatch):
+    import config
+    import strategy.ai_advisor as aa
+    from state import RuntimeState
+
+    monkeypatch.setattr(config, "AI_ENABLED", True)
+    monkeypatch.setattr(config, "BACKTEST_MODE", False)
+    monkeypatch.setattr(config, "AI_BACKTEST_ENABLED", False)
+    monkeypatch.setattr(config, "AI_MIN_BASE_SCORE", 0.0)
+    monkeypatch.setattr(config, "AI_MIN_CALL_INTERVAL_SEC", 60)
+
+    c1 = aa.AICandidate("openai", "https://o", "k1", "m1")
+    monkeypatch.setattr(aa, "_build_candidates", lambda: [c1])
+
+    async def fake_query(candidate, system_msg, user_msg):
+        return aa.AIAdvice(decision="PASS", score_delta=0.0, reason="ok")
+
+    monkeypatch.setattr(aa, "_query_candidate", fake_query)
+
+    rs = RuntimeState()
+    first = await aa.get_trade_advice("LONG", 100.0, rs, None, "BULL")
+    second = await aa.get_trade_advice("LONG", 100.0, rs, None, "BULL")
+
+    assert first is not None
+    assert second is None
+    assert rs.last_ai_note.startswith("AI cooldown:")

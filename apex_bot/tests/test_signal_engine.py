@@ -67,3 +67,65 @@ async def test_no_signal_low_balance():
     assert result is None
     assert rs.last_rejection_reason == "LOW_BALANCE"
 
+
+@pytest.mark.asyncio
+async def test_reject_insufficient_margin(monkeypatch):
+    import config
+    import strategy.signal_engine as se
+    from models import Indicators, TradeLevel
+    from state import RuntimeState
+
+    config.BACKTEST_MODE = True
+    config.MIN_BALANCE_USD = 50.0
+    config.HTF_FILTER_ENABLED = False
+    config.ENFORCE_VOLUME_FILTER = False
+    config.MIN_CONFIDENCE = 10.0
+    ps = _make_ps(balance=100.0)
+    rs = RuntimeState()
+    rs.context.should_trade = True
+    rs.context.regime = "TREND"
+    rs.context.trend_dir = "BULL"
+    rs.micro.last_updated_ms = 1
+    rs.micro.best_ask = 50000.0
+    rs.micro.best_bid = 49999.0
+    rs.micro.mark_price = 50000.0
+    rs.micro.spread_pct = 0.0001
+    rs.indicators["15m"] = Indicators(atr=500.0, atr_avg_24h=1000.0, volume_ratio=2.0)
+    rs.indicators["5m"] = Indicators(atr=400.0)
+    rs.indicators["1m"] = Indicators(atr=300.0)
+
+    seq = [
+        (80.0, 10.0, {"LONG": {"ema": 10.0}, "SHORT": {}}),
+        (70.0, 10.0, {"LONG": {}, "SHORT": {}}),
+        (60.0, 10.0, {"LONG": {}, "SHORT": {}}),
+    ]
+    monkeypatch.setattr(se, "_score_tf", lambda ind, micro: seq.pop(0))
+    async def _no_ai(*args, **kwargs):
+        return None
+    monkeypatch.setattr(se.ai_advisor, "get_trade_advice", _no_ai)
+    monkeypatch.setattr(se.fee_calculator, "is_tp1_profitable", lambda *args, **kwargs: True)
+    monkeypatch.setattr(
+        se.risk_manager,
+        "calculate_levels",
+        lambda **kwargs: TradeLevel(
+            entry=50000.0,
+            stop=49500.0,
+            tp1=51000.0,
+            tp2=51500.0,
+            tp3=52000.0,
+            qty_btc=0.002,
+            qty_tp1=0.0008,
+            qty_tp2=0.0007,
+            qty_tp3=0.0005,
+            notional_usd=1000.0,
+            margin_usd=95.0,
+            rr=2.0,
+            stop_dist_pct=0.01,
+            leverage=10,
+        ),
+    )
+
+    result = await se.evaluate_signal(ps, rs)
+    assert result is None
+    assert rs.last_rejection_reason == "INSUFFICIENT_MARGIN"
+

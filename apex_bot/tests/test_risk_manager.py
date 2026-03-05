@@ -20,6 +20,7 @@ def test_long_levels():
     assert lvl is not None
     assert lvl.stop < lvl.entry < lvl.tp1 < lvl.tp2 < lvl.tp3
     assert lvl.rr >= 2.0
+    assert lvl.leverage == config.LEVERAGE
 
 def test_short_levels():
     lvl = calculate_levels(50000, "SHORT", 500, 10000, _ctx(trend_dir="BEAR"), False)

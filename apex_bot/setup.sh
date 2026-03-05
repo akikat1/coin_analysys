@@ -36,8 +36,8 @@ else
 fi
 
 # Создание папок
-mkdir -p logs data/cache
-echo "✅ Папки logs/ и data/cache/ созданы"
+mkdir -p logs data/cache reports
+echo "✅ Папки logs/, data/cache/ и reports/ созданы"
 
 echo ""
 echo "=== ГОТОВО ==="

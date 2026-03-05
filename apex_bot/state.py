@@ -10,7 +10,7 @@ from models import (
 )
 import json, os, dataclasses, logging
 
-STATE_FILE = "state.json"; STATE_FILE_TMP = "state.json.tmp"; STATE_VERSION = 9
+STATE_FILE = "state.json"; STATE_FILE_TMP = "state.json.tmp"; STATE_VERSION = 10
 
 @dataclass
 class PersistentState:

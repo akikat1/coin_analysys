@@ -64,6 +64,7 @@ class TradeLevel:
     entry: float; stop: float; tp1: float; tp2: float; tp3: float
     qty_btc: float; qty_tp1: float; qty_tp2: float; qty_tp3: float
     notional_usd: float; margin_usd: float; rr: float; stop_dist_pct: float
+    leverage: int
 
 @dataclass
 class Signal:

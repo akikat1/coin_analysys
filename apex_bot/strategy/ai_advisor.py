@@ -308,14 +308,21 @@ async def get_trade_advice(
     htf_dir: str,
 ) -> AIAdvice | None:
     if not config.AI_ENABLED:
+        rs.last_ai_note = "AI disabled: AI_ENABLED=false"
         return None
     if config.BACKTEST_MODE and not config.AI_BACKTEST_ENABLED:
+        rs.last_ai_note = "AI disabled in backtest"
         return None
     if base_score < config.AI_MIN_BASE_SCORE:
+        rs.last_ai_note = (
+            f"AI skip: base {base_score:.1f} < min {config.AI_MIN_BASE_SCORE:.1f}"
+        )
         return None
 
     now = time.time()
     if rs.last_ai_ts and (now - rs.last_ai_ts) < config.AI_MIN_CALL_INTERVAL_SEC:
+        wait_left = config.AI_MIN_CALL_INTERVAL_SEC - (now - rs.last_ai_ts)
+        rs.last_ai_note = f"AI cooldown: {max(wait_left, 0.0):.1f}s left"
         return None
     rs.last_ai_ts = now
 
@@ -323,6 +330,8 @@ async def get_trade_advice(
     if not candidates:
         rs.last_ai_note = "AI disabled: no configured provider/key/model"
         return None
+
+    rs.last_ai_note = f"AI querying: {len(candidates)} candidate(s)"
 
     payload = _make_prompt_payload(direction, base_score, rs, ind_15, htf_dir)
     system_msg = (

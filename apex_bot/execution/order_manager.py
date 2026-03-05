@@ -15,6 +15,14 @@ async def enter_trade(sig: Signal, ps: PersistentState, rs: RuntimeState) -> Pos
     lvl: TradeLevel = sig.levels
     side = "BUY" if sig.direction == "LONG" else "SELL"
     stop_side = "SELL" if sig.direction == "LONG" else "BUY"
+    target_leverage = max(
+        config.MIN_LEVERAGE,
+        min(config.MAX_LEVERAGE, int(getattr(lvl, "leverage", config.LEVERAGE))),
+    )
+    from execution import exchange_setup
+    if not await exchange_setup.set_leverage(target_leverage, config.SYMBOL):
+        logging.warning("enter_trade: failed to set leverage=%s, skip entry", target_leverage)
+        return None
 
     entry_info = await _execute_entry(sig.direction, lvl)
     if not entry_info:
@@ -59,7 +67,7 @@ async def enter_trade(sig: Signal, ps: PersistentState, rs: RuntimeState) -> Pos
         funding_rate_at_entry=rs.micro.funding_rate,
         open_timestamp_ms=int(time.time()*1000), mode="live",
         entry_order_id=entry_order_id, is_limit_entry=is_limit_entry,
-        leverage_used=int(round(lvl.notional_usd / lvl.margin_usd)) if lvl.margin_usd > 0 else config.LEVERAGE
+        leverage_used=target_leverage
     )
     trade_logger.log_signal(sig.direction, sig.confidence, sig.score_15m, sig.score_5m,
                             sig.score_1m, True, "", lvl.rr,

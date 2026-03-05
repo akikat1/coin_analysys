@@ -1,4 +1,4 @@
-aiohttp==3.9.5
+﻿aiohttp==3.9.5
 pandas==2.2.2; python_version < "3.13"
 pandas==3.0.1; python_version >= "3.13"
 pandas-ta==0.3.14b; python_version < "3.13"
@@ -15,6 +15,8 @@ pytest==8.2.2
 pytest-asyncio==0.23.7
 watchdog==4.0.1
 jinja2==3.1.4
+aiosqlite==0.20.0
 
-# НЕ добавлять: asyncio, schedule, requests, python-binance, websockets, pickle, scipy
+# РќР• РґРѕР±Р°РІР»СЏС‚СЊ: asyncio, schedule, requests, python-binance, websockets, pickle, scipy
+
 

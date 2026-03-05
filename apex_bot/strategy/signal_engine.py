@@ -142,9 +142,13 @@ def _apply_volume_profile_bonus(direction: str, ind_15, entry_est: float) -> flo
 
 
 async def evaluate_signal(ps: PersistentState, rs: RuntimeState) -> Signal | None:
+    ai_evaluated = False
+
     def _reject(reason: str) -> None:
         rs.last_rejection_reason = reason
         rs.last_signal_ts = time.time()
+        if config.AI_ENABLED and not ai_evaluated and not reason.startswith("AI_VETO("):
+            rs.last_ai_note = f"AI skip before signal: {reason}"
 
     rs.last_score_breakdown = None
     now_ms = int(time.time() * 1000)
@@ -293,6 +297,7 @@ async def evaluate_signal(ps: PersistentState, rs: RuntimeState) -> Signal | Non
         breakdown.htf_score = 6.0
         base += 6.0
 
+    ai_evaluated = True
     ai_advice = await ai_advisor.get_trade_advice(direction, base, rs, ind_15, htf_dir)
     if ai_advice:
         breakdown.ai_decision = ai_advice.decision
@@ -336,7 +341,11 @@ async def evaluate_signal(ps: PersistentState, rs: RuntimeState) -> Signal | Non
     if levels is None or levels.rr < config.MIN_RR:
         _reject(f"LOW_RR({levels.rr if levels else 0:.2f}<{config.MIN_RR})")
         return None
-    eff_lev = levels.notional_usd / levels.margin_usd if levels.margin_usd > 0 else config.LEVERAGE
+    if levels.margin_usd > ps.available_balance * 0.9:
+        _reject("INSUFFICIENT_MARGIN")
+        return None
+
+    eff_lev = levels.leverage if levels.leverage > 0 else config.LEVERAGE
 
     if not fee_calculator.is_tp1_profitable(entry_est, levels.tp1, levels.qty_btc, eff_lev, direction):
         _reject("TP1_NOT_PROFITABLE")

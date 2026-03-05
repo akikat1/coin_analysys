@@ -1,4 +1,4 @@
-import csv, os, time
+import asyncio, csv, os, time
 from models import Position, PnlResult
 
 TRADES_LOG  = "logs/trades_log.csv"
@@ -24,15 +24,27 @@ def log_trade(pos: Position, exit_price: float, closed_qty: float,
     import config
     lev = pos.leverage_used if getattr(pos, "leverage_used", 0) > 0 else config.LEVERAGE
     now = int(time.time()*1000); dur = (now - pos.open_timestamp_ms) // 1000
+    row = [
+        pos.open_timestamp_ms, now, pos.direction, pos.entry_price, pos.avg_fill_price,
+        exit_price, pos.qty_btc, closed_qty, lev,
+        (pos.qty_btc*pos.entry_price)/lev,
+        pnl.gross_pnl, pnl.entry_fee, pnl.exit_fee, pnl.slippage,
+        pnl.net_pnl, total_net, pnl.net_pct_on_margin, dur, reason,
+        pos.confidence_at_entry, pos.adx_at_entry, pos.regime_at_entry,
+        pos.funding_rate_at_entry, pos.mode
+    ]
     with open(TRADES_LOG, "a", newline="", encoding="utf-8") as f:
-        csv.writer(f).writerow([
-            pos.open_timestamp_ms, now, pos.direction, pos.entry_price, pos.avg_fill_price,
-            exit_price, pos.qty_btc, closed_qty, lev,
-            (pos.qty_btc*pos.entry_price)/lev,
-            pnl.gross_pnl, pnl.entry_fee, pnl.exit_fee, pnl.slippage,
-            pnl.net_pnl, total_net, pnl.net_pct_on_margin, dur, reason,
-            pos.confidence_at_entry, pos.adx_at_entry, pos.regime_at_entry,
-            pos.funding_rate_at_entry, pos.mode])
+        csv.writer(f).writerow(row)
+
+    # Best effort SQLite mirror of trades history.
+    try:
+        from monitor import db as trades_db
+        loop = asyncio.get_running_loop()
+        loop.create_task(trades_db.insert_trade(dict(zip(TRADES_HDR, row))))
+    except RuntimeError:
+        pass
+    except Exception:
+        pass
 
 def log_signal(direction: str, score: float, s15: float, s5: float, s1: float,
                passed: bool, rejection: str, rr: float,

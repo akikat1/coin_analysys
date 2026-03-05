@@ -65,6 +65,7 @@ if not exist ".env" (
 REM Создание папок
 if not exist "logs" mkdir logs
 if not exist "data\cache" mkdir data\cache
+if not exist "reports" mkdir reports
 echo OK: Папки созданы
 
 echo.

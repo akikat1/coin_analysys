@@ -59,7 +59,7 @@ async def run(ps, rs, mode: str, stop_event: asyncio.Event):
         t.add_row("Fear&Greed:",  _sentiment_color(sent.value) if sent.available else "[dim]—[/dim]")
         t.add_row("Last Signal:", _rejection_color(rs.last_rejection_reason))
         if config.AI_ENABLED:
-            ai_text = rs.last_ai_note if rs.last_ai_note else "—"
+            ai_text = rs.last_ai_note if rs.last_ai_note else "waiting for first AI cycle"
             t.add_row("AI advisor:", f"[magenta]{ai_text[:90]}[/magenta]")
         if rs.last_score_breakdown:
             t.add_row("Score breakdown:", f"[dim]{rs.last_score_breakdown.to_str()[:90]}[/dim]")
@@ -108,4 +108,3 @@ async def run(ps, rs, mode: str, stop_event: asyncio.Event):
                 await asyncio.sleep(1.0)
     except asyncio.CancelledError:
         pass
-

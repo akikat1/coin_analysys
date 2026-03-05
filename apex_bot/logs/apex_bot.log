@@ -2045,3 +2045,104 @@ connector: <aiohttp.connector.TCPConnector object at 0x000002D6B09112B0>
 2026-03-05 16:51:12,352 [INFO] root: Fear&Greed: 22 (Extreme Fear)
 2026-03-05 16:53:47,127 [INFO] root: Позиция будет закрыта при следующем запуске.
 2026-03-05 16:53:47,129 [INFO] root: Live бот остановлен.
+2026-03-05 17:27:56,173 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 17:27:57,015 [INFO] root: 🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: LONG @ 73090.2
+2026-03-05 17:27:59,382 [INFO] root: Время синхронизировано: -1259ms
+2026-03-05 17:27:59,744 [INFO] root: One-Way Mode: уже был
+2026-03-05 17:28:00,144 [INFO] root: ISOLATED: уже был
+2026-03-05 17:28:00,545 [INFO] root: Плечо: 10x
+2026-03-05 17:28:01,209 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 17:28:01,571 [WARNING] root: position_sync: РАСХОЖДЕНИЕ! state.json содержит позицию LONG @ 73090.20, но биржа показывает qty=0.0000 (позиции нет). Сбрасываем ps.position = None.
+2026-03-05 17:28:05,443 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 17:28:06,291 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 17:28:06,560 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 17:28:09,850 [INFO] httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-03-05 17:28:09,851 [WARNING] root: ai_advisor: gemini:gemini-2.0-flash:HTTP429
+2026-03-05 17:28:10,685 [INFO] httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-03-05 17:28:10,687 [WARNING] root: ai_advisor: gemini:gemini-2.0-flash-lite:HTTP429
+2026-03-05 17:28:11,561 [INFO] httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent "HTTP/1.1 404 Not Found"
+2026-03-05 17:28:11,564 [WARNING] root: ai_advisor: gemini:gemini-1.5-pro:HTTP404
+2026-03-05 17:28:12,373 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-05 17:28:12,374 [INFO] root: ai_advisor: fallback success on #4 groq/llama-3.3-70b-versatile
+2026-03-05 17:28:12,374 [INFO] root: LIMIT entry: side=BUY qty=0.007000 price=72722.60 timeout=8s
+2026-03-05 17:28:21,478 [INFO] root: Лимитный ордер истёк, переключаюсь на рыночный
+2026-03-05 17:28:23,137 [WARNING] root: Binance API -4120: Order type not supported for this endpoint. Please use the Algo Order API endpoints instead.
+2026-03-05 17:28:23,486 [WARNING] root: Binance API -4120: Order type not supported for this endpoint. Please use the Algo Order API endpoints instead.
+2026-03-05 17:28:23,488 [INFO] root: LIVE ВХОД LONG @ 72742.80 qty=0.0070 conf=62 RR=2.00
+2026-03-05 17:33:07,479 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 17:38:08,162 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 17:43:08,911 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 17:48:10,138 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 17:49:04,611 [INFO] root: Live бот остановлен.
+2026-03-05 18:21:54,455 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 18:21:57,718 [INFO] root: 📅 Новый торговый день: 2026-03-05 — статистика сброшена
+2026-03-05 18:21:57,718 [INFO] root: 🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: LONG @ 50000.0
+2026-03-05 18:21:59,946 [INFO] root: Время синхронизировано: -1305ms
+2026-03-05 18:22:00,347 [INFO] root: One-Way Mode: already set
+2026-03-05 18:22:00,751 [INFO] root: ISOLATED: already set
+2026-03-05 18:22:01,174 [INFO] root: Leverage set: 10x
+2026-03-05 18:22:01,637 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 18:22:02,012 [WARNING] root: position_sync: РАСХОЖДЕНИЕ! state.json содержит позицию LONG @ 50000.00, но биржа показывает qty=0.0000 (позиции нет). Сбрасываем ps.position = None.
+2026-03-05 18:22:05,737 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 18:22:08,264 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 18:22:22,770 [WARNING] root: sentiment fetch error: 
+2026-03-05 18:23:03,060 [INFO] root: Leverage set: 10x
+2026-03-05 18:23:03,061 [INFO] root: LIMIT entry: side=SELL qty=0.010000 price=72580.30 timeout=8s
+2026-03-05 18:23:07,860 [INFO] root: LIMIT entry: FILLED
+2026-03-05 18:23:08,205 [WARNING] root: Binance API -4120: Order type not supported for this endpoint. Please use the Algo Order API endpoints instead.
+2026-03-05 18:23:08,587 [WARNING] root: Binance API -4120: Order type not supported for this endpoint. Please use the Algo Order API endpoints instead.
+2026-03-05 18:23:08,587 [INFO] root: LIVE ВХОД SHORT @ 72580.30 qty=0.0100 conf=56 RR=2.00
+2026-03-05 18:23:11,880 [INFO] root: Live бот остановлен.
+2026-03-05 18:30:05,135 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 18:30:06,005 [INFO] root: 🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: SHORT @ 72565.8
+2026-03-05 18:30:07,024 [INFO] root: Время синхронизировано: -1324ms
+2026-03-05 18:30:07,421 [INFO] root: One-Way Mode: already set
+2026-03-05 18:30:07,812 [INFO] root: ISOLATED: already set
+2026-03-05 18:30:08,199 [INFO] root: Leverage set: 10x
+2026-03-05 18:30:08,882 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 18:30:09,263 [INFO] root: position_sync: OK — SHORT qty=0.0100
+2026-03-05 18:30:11,509 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 18:30:12,506 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 18:30:12,717 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 18:31:26,240 [INFO] root: Live бот остановлен.
+2026-03-05 18:31:27,672 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 18:31:28,426 [INFO] root: 🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: SHORT @ 72565.8
+2026-03-05 18:31:29,125 [INFO] root: Время синхронизировано: -1323ms
+2026-03-05 18:31:29,506 [INFO] root: One-Way Mode: already set
+2026-03-05 18:31:29,975 [INFO] root: ISOLATED: already set
+2026-03-05 18:31:30,434 [INFO] root: Leverage set: 10x
+2026-03-05 18:31:31,613 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 18:31:31,999 [WARNING] root: position_sync: РАСХОЖДЕНИЕ! state.json содержит позицию SHORT @ 72565.80, но биржа показывает qty=0.0000 (позиции нет). Сбрасываем ps.position = None.
+2026-03-05 18:31:33,655 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 18:31:34,597 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 18:31:34,672 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 18:32:46,471 [INFO] root: Live бот остановлен.
+2026-03-05 18:42:37,388 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 18:42:38,174 [INFO] root: 📅 Новый торговый день: 2026-03-05 — статистика сброшена
+2026-03-05 18:42:38,175 [INFO] root: 🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: LONG @ 50000.0
+2026-03-05 18:42:39,332 [INFO] root: Время синхронизировано: -1342ms
+2026-03-05 18:42:39,723 [INFO] root: One-Way Mode: already set
+2026-03-05 18:42:40,127 [INFO] root: ISOLATED: already set
+2026-03-05 18:42:40,514 [INFO] root: Leverage set: 10x
+2026-03-05 18:42:41,194 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 18:42:41,579 [WARNING] root: position_sync mismatch: state has LONG @ 50000.00, exchange has no position
+2026-03-05 18:42:43,699 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 18:42:44,646 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 18:42:44,782 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 18:47:45,499 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 18:50:03,134 [INFO] root: Live бот остановлен.
+2026-03-05 19:00:45,413 [INFO] root: AI advisor: enabled mode=hybrid provider=auto min_base=58.0 cooldown=2s fail_open=True candidates=5 [gemini/gemini-2.0-flash, gemini/gemini-2.0-flash-lite, gemini/gemini-1.5-pro, +2 more]
+2026-03-05 19:00:45,414 [INFO] root: === APEX BOT v12 | режим: live ===
+2026-03-05 19:00:47,451 [INFO] root: Время синхронизировано: -1373ms
+2026-03-05 19:00:47,837 [INFO] root: One-Way Mode: already set
+2026-03-05 19:00:48,230 [INFO] root: ISOLATED: already set
+2026-03-05 19:00:48,615 [INFO] root: Leverage set: 10x
+2026-03-05 19:00:49,055 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 19:00:51,812 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 19:00:51,813 [WARNING] root: Rate limit (1763/1100), ждём 60.5с
+2026-03-05 19:00:52,072 [WARNING] root: Rate limit (1763/1100), ждём 60.2с
+2026-03-05 19:00:52,837 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 19:01:53,382 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 19:05:53,528 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 19:08:20,460 [INFO] root: Market WS reconnect in 2s (attempt=0)
+2026-03-05 19:09:46,746 [INFO] root: Live бот остановлен.
