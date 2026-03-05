@@ -1,5 +1,5 @@
 {
-  "state_version": 9,
+  "state_version": 10,
   "position": {
     "direction": "LONG",
     "entry_price": 50000.0,
@@ -24,12 +24,13 @@
     "adx_at_entry": 0.0,
     "regime_at_entry": "",
     "funding_rate_at_entry": 0.0,
-    "open_timestamp_ms": 1772653755498,
+    "open_timestamp_ms": 1772720689840,
     "mode": "paper",
     "trailing_stop_active": true,
     "trailing_stop_price": 51400.0,
     "entry_order_id": 0,
-    "is_limit_entry": false
+    "is_limit_entry": false,
+    "leverage_used": 0
   },
   "daily_pnl_usd": 0.0,
   "daily_pnl_pct": 0.0,

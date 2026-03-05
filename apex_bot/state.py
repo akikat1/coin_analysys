@@ -12,6 +12,19 @@ import json, os, dataclasses, logging
 
 STATE_FILE = "state.json"; STATE_FILE_TMP = "state.json.tmp"; STATE_VERSION = 10
 
+
+def _is_valid_loaded_position(pos: Position) -> bool:
+    # Bot trades BTCUSDT only; reject obvious placeholder/corrupt entries.
+    if pos.entry_price <= 10_000:
+        return False
+    if pos.avg_fill_price <= 10_000:
+        return False
+    if pos.qty_btc <= 0 or pos.qty_remaining < 0:
+        return False
+    if pos.qty_remaining > pos.qty_btc * 1.05:
+        return False
+    return True
+
 @dataclass
 class PersistentState:
     state_version: int=STATE_VERSION; position: Position|None=None
@@ -50,8 +63,15 @@ def load() -> PersistentState:
             os.replace(STATE_FILE, STATE_FILE + f".v{data.get('state_version',0)}.bak")
             return PersistentState()
         if data.get("position"):
-            try: data["position"] = Position(**data["position"])
-            except: data["position"] = None
+            try:
+                loaded_pos = Position(**data["position"])
+                if _is_valid_loaded_position(loaded_pos):
+                    data["position"] = loaded_pos
+                else:
+                    logging.warning("state.json position invalid, reset to None")
+                    data["position"] = None
+            except Exception:
+                data["position"] = None
         valid = PersistentState.__dataclass_fields__
         return PersistentState(**{k: v for k, v in data.items() if k in valid})
     except Exception as e:

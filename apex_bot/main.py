@@ -353,13 +353,13 @@ async def run_live() -> None:
 
     ps = state.load()
     _maybe_reset_daily(ps)
-    if ps.position:
-        logging.info(f"🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: {ps.position.direction} @ {ps.position.entry_price}")
 
     await sync_server_time()
     await exchange_setup.setup()
     await exchange_info.load()
     await sync_on_startup(ps)
+    if ps.position:
+        logging.info(f"🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: {ps.position.direction} @ {ps.position.entry_price}")
 
     if config.LIVE_SMOKE_TEST_ON_START:
         if not config.TESTNET and not config.LIVE_SMOKE_ALLOW_MAINNET:
