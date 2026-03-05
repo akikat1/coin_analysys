@@ -2317,3 +2317,4 @@ connector: <aiohttp.connector.TCPConnector object at 0x000002D6B09112B0>
 2026-03-05 21:58:36,525 [INFO] root: WS reconnect in 2s (attempt=0)
 2026-03-05 21:58:36,525 [INFO] root: WS reconnect in 2s (attempt=0)
 2026-03-05 21:58:50,540 [INFO] root: Бот остановлен.
+2026-03-05 22:00:28,556 [INFO] root: Fear&Greed: 22 (Extreme Fear)
