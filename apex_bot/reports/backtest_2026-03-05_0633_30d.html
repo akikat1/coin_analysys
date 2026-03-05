@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="UTF-8">
+<title>APEX BOT — Backtest Report</title>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; background:#0d1117; color:#c9d1d9; margin:20px; }
+  h1 { color:#58a6ff; } h2 { color:#79c0ff; border-bottom:1px solid #30363d; padding-bottom:6px; }
+  table { border-collapse:collapse; width:100%; margin-bottom:20px; }
+  th { background:#161b22; color:#58a6ff; padding:8px 12px; text-align:left; border:1px solid #30363d; }
+  td { padding:6px 12px; border:1px solid #21262d; }
+  tr:nth-child(even) { background:#161b22; }
+  .positive { color:#3fb950; font-weight:bold; }
+  .negative { color:#f85149; font-weight:bold; }
+  .metric-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:20px 0; }
+  .metric-card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:16px; }
+  .metric-label { font-size:12px; color:#8b949e; }
+  .metric-value { font-size:24px; font-weight:bold; margin-top:4px; }
+  canvas { max-width:100%; margin:20px 0; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head><body>
+<h1>📊 APEX BOT — Backtest Report</h1>
+<p>Сгенерирован: 2026-03-05 06:33 UTC | Период: 30 дней</p>
+
+<h2>Сводные метрики</h2>
+<div class="metric-grid">
+  
+  <div class="metric-card">
+    <div class="metric-label">Всего сделок</div>
+    <div class="metric-value ">0</div>
+  </div>
+  
+  <div class="metric-card">
+    <div class="metric-label">Win Rate</div>
+    <div class="metric-value negative">0.0%</div>
+  </div>
+  
+  <div class="metric-card">
+    <div class="metric-label">Profit Factor</div>
+    <div class="metric-value negative">0.00</div>
+  </div>
+  
+  <div class="metric-card">
+    <div class="metric-label">Sharpe Ratio</div>
+    <div class="metric-value negative">0.00</div>
+  </div>
+  
+  <div class="metric-card">
+    <div class="metric-label">Max Drawdown</div>
+    <div class="metric-value ">0.0%</div>
+  </div>
+  
+  <div class="metric-card">
+    <div class="metric-label">Net P&L</div>
+    <div class="metric-value negative">+0.00$</div>
+  </div>
+  
+  <div class="metric-card">
+    <div class="metric-label">Avg Win</div>
+    <div class="metric-value positive">0.00$</div>
+  </div>
+  
+  <div class="metric-card">
+    <div class="metric-label">Avg Loss</div>
+    <div class="metric-value negative">0.00$</div>
+  </div>
+  
+</div>
+
+<h2>Equity Curve</h2>
+<canvas id="equityChart" height="80"></canvas>
+<script>
+new Chart(document.getElementById('equityChart'), {
+  type: 'line',
+  data: {
+    labels: [0],
+    datasets: [{
+      label: 'Equity ($)', data: [10000.0],
+      borderColor:'#58a6ff', backgroundColor:'rgba(88,166,255,0.1)',
+      tension:0.3, pointRadius:0, fill:true
+    }]
+  },
+  options: { plugins:{ legend:{display:false} }, scales:{ x:{display:false} } }
+});
+</script>
+
+<h2>Сделки (0)</h2>
+<table>
+<tr><th>#</th><th>Направление</th><th>Вход</th><th>Выход</th><th>Причина</th>
+    <th>Net PnL</th><th>Длительность</th><th>Score</th></tr>
+
+</table>
+</body></html>
