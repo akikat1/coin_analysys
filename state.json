@@ -24,7 +24,7 @@
     "adx_at_entry": 0.0,
     "regime_at_entry": "",
     "funding_rate_at_entry": 0.0,
-    "open_timestamp_ms": 1772720689840,
+    "open_timestamp_ms": 1772722161235,
     "mode": "paper",
     "trailing_stop_active": true,
     "trailing_stop_price": 51400.0,

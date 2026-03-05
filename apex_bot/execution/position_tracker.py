@@ -47,19 +47,27 @@ async def _handle_tp1_filled(fill_price: float, ps: PersistentState, rs: Runtime
     trade_logger.log_trade(pos, fill_price, pos.qty_tp1, "TP1", pnl, pos.realized_pnl_usd)
     stop_side = "SELL" if pos.direction == "LONG" else "BUY"
     # Отменить старый стоп и выставить новый на безубыток
-    from execution.order_manager import cancel_order
     from data import rest_client
     from execution import exchange_info
+    cancel_ok = True
     if pos.stop_order_id > 0:
-        await cancel_order(pos.stop_order_id)
-    new_stop_r = await rest_client._request("POST", "/fapi/v1/order", {
-        "symbol": config.SYMBOL, "side": stop_side, "type": "STOP_MARKET",
-        "stopPrice": exchange_info.round_price(pos.avg_fill_price),
-        "quantity": exchange_info.round_qty(pos.qty_remaining),
-        "reduceOnly": "true", "timeInForce": "GTE_GTC"
-    })
-    if new_stop_r and not new_stop_r.get("_ignored"):
-        pos.stop_order_id = int(new_stop_r.get("orderId", 0))
+        cancel_r = await rest_client._request("DELETE", "/fapi/v1/order", {
+            "symbol": config.SYMBOL,
+            "orderId": pos.stop_order_id,
+        })
+        if cancel_r is None:
+            cancel_ok = False
+            logging.warning("tp1: failed to cancel old stop order_id=%s, keep current stop", pos.stop_order_id)
+
+    if cancel_ok:
+        new_stop_r = await rest_client._request("POST", "/fapi/v1/order", {
+            "symbol": config.SYMBOL, "side": stop_side, "type": "STOP_MARKET",
+            "stopPrice": exchange_info.round_price(pos.avg_fill_price),
+            "quantity": exchange_info.round_qty(pos.qty_remaining),
+            "reduceOnly": "true", "timeInForce": "GTE_GTC"
+        })
+        if new_stop_r and not new_stop_r.get("_ignored"):
+            pos.stop_order_id = int(new_stop_r.get("orderId", 0))
     # Выставить TP2
     tp2_r = await rest_client._request("POST", "/fapi/v1/order", {
         "symbol": config.SYMBOL, "side": stop_side, "type": "TAKE_PROFIT_MARKET",
@@ -234,6 +242,9 @@ async def update_trailing_stop(ps: PersistentState, rs: RuntimeState) -> None:
     from execution import exchange_info
     trail_offset = atr * config.TRAILING_ATR_MULTIPLIER
     updated = False
+    prev_stop_price = pos.stop_price
+    prev_trailing_active = pos.trailing_stop_active
+    prev_trailing_price = pos.trailing_stop_price
 
     if pos.direction == "LONG":
         candidate = exchange_info.round_price(mark - trail_offset)
@@ -254,24 +265,34 @@ async def update_trailing_stop(ps: PersistentState, rs: RuntimeState) -> None:
         return
 
     if not config.PAPER_MODE and pos.stop_order_id > 0:
-        try:
-            from execution.order_manager import cancel_order
-            from data import rest_client
-            stop_side = "SELL" if pos.direction == "LONG" else "BUY"
-            await cancel_order(pos.stop_order_id)
-            r = await rest_client._request("POST", "/fapi/v1/order", {
-                "symbol": config.SYMBOL,
-                "side": stop_side,
-                "type": "STOP_MARKET",
-                "stopPrice": exchange_info.round_price(pos.stop_price),
-                "quantity": exchange_info.round_qty(pos.qty_remaining),
-                "reduceOnly": "true",
-                "timeInForce": "GTE_GTC",
-            })
-            if r and not r.get("_ignored"):
-                pos.stop_order_id = int(r.get("orderId", pos.stop_order_id))
-        except Exception as e:
-            logging.warning(f"update_trailing_stop: не удалось обновить stop ордер: {e}")
+        from data import rest_client
+
+        stop_side = "SELL" if pos.direction == "LONG" else "BUY"
+        cancel_r = await rest_client._request("DELETE", "/fapi/v1/order", {
+            "symbol": config.SYMBOL,
+            "orderId": pos.stop_order_id,
+        })
+        if cancel_r is None:
+            pos.stop_price = prev_stop_price
+            pos.trailing_stop_active = prev_trailing_active
+            pos.trailing_stop_price = prev_trailing_price
+            logging.warning(
+                "update_trailing_stop: cancel failed for stop order_id=%s, skip replace",
+                pos.stop_order_id,
+            )
+            return
+
+        r = await rest_client._request("POST", "/fapi/v1/order", {
+            "symbol": config.SYMBOL,
+            "side": stop_side,
+            "type": "STOP_MARKET",
+            "stopPrice": exchange_info.round_price(pos.stop_price),
+            "quantity": exchange_info.round_qty(pos.qty_remaining),
+            "reduceOnly": "true",
+            "timeInForce": "GTE_GTC",
+        })
+        if r and not r.get("_ignored"):
+            pos.stop_order_id = int(r.get("orderId", pos.stop_order_id))
 
     import state
     state.save(ps)

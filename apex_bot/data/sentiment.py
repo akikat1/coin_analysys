@@ -20,7 +20,10 @@ async def fetch(session) -> SentimentData:
     """Получить текущий Fear & Greed Index. Никогда не бросает исключение."""
     try:
         timeout = aiohttp.ClientTimeout(total=10)
-        async with session.get(_SENTIMENT_URL, timeout=timeout) as r:
+        req = session.get(_SENTIMENT_URL, timeout=timeout)
+        if not hasattr(req, "__aenter__"):
+            req = await req
+        async with req as r:
             if r.status != 200:
                 logging.warning(f"sentiment: HTTP {r.status}")
                 return SentimentData()
@@ -32,7 +35,7 @@ async def fetch(session) -> SentimentData:
             return SentimentData(value=val, label=lbl,
                                  last_updated_ts=time.time(), available=True)
     except Exception as e:
-        logging.warning(f"sentiment fetch error: {e}")
+        logging.warning("sentiment fetch error: %s - %s", type(e).__name__, e)
         return SentimentData()
 
 async def run_sentiment_loop(rs, session):

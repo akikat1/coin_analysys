@@ -31,7 +31,7 @@ async def preload_candles(cs: CollectorState, symbol: str = "BTCUSDT") -> None:
                 "/fapi/v1/klines",
                 {"symbol": symbol, "interval": tf, "limit": limit},
                 signed=False,
-                weight=2,
+                weight=5,
             )
             if not isinstance(data, list):
                 loaded[tf] = 0
@@ -55,6 +55,7 @@ async def preload_candles(cs: CollectorState, symbol: str = "BTCUSDT") -> None:
         except Exception as e:
             loaded[tf] = 0
             logging.warning(f"preload_candles {tf}: {e}")
+        await asyncio.sleep(0.2)
     logging.info(
         "preload_candles: 1h=%s 15m=%s 5m=%s 1m=%s",
         loaded.get("1h", 0),
