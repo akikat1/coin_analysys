@@ -2299,3 +2299,21 @@ connector: <aiohttp.connector.TCPConnector object at 0x000002D6B09112B0>
 2026-03-05 21:43:15,051 [INFO] root: Fear&Greed: 22 (Extreme Fear)
 2026-03-05 21:44:16,682 [INFO] root: server time synced: offset=-1489ms
 2026-03-05 21:44:39,709 [INFO] root: Бот остановлен.
+2026-03-05 21:45:26,384 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 21:47:32,747 [INFO] root: PAPER ENTRY LONG @ 71327.30 base_score=56.3 final_score=56.3 (AI+0.0) RR=2.00
+2026-03-05 21:49:47,991 [INFO] root: AI advisor: enabled mode=hybrid provider=auto min_base=58.0 cooldown=2s fail_open=True candidates=22 [gemini/gemini-3.1-pro-preview, gemini/gemini-3.1-flash-lite-preview, gemini/gemini-3-pro-preview, +19 more]
+2026-03-05 21:49:47,992 [INFO] root: === APEX BOT v12 | режим: paper ===
+2026-03-05 21:49:48,107 [INFO] root: 🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: LONG @ 71327.3
+2026-03-05 21:49:48,948 [INFO] root: server time synced: offset=-1623ms
+2026-03-05 21:49:50,036 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 21:49:52,732 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 21:49:54,031 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 21:49:54,031 [CRITICAL] root: DEADMAN_SWITCH triggered: stale_ms=1772729394031 > 15s
+2026-03-05 21:49:54,033 [INFO] root: ЗАКРЫТО [DEADMAN_SWITCH] @ 71327.30  net=-1.97$
+2026-03-05 21:49:54,356 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 21:50:27,141 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 21:54:55,273 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 21:55:27,821 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 21:58:36,525 [INFO] root: WS reconnect in 2s (attempt=0)
+2026-03-05 21:58:36,525 [INFO] root: WS reconnect in 2s (attempt=0)
+2026-03-05 21:58:50,540 [INFO] root: Бот остановлен.
