@@ -2254,3 +2254,23 @@ connector: <aiohttp.connector.TCPConnector object at 0x000002D6B09112B0>
 2026-03-05 20:47:10,445 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
 2026-03-05 20:47:11,185 [INFO] root: Fear&Greed: 22 (Extreme Fear)
 2026-03-05 20:47:31,348 [INFO] root: Live бот остановлен.
+2026-03-05 21:13:25,296 [ERROR] root: x MIN_BALANCE_USD=50.0 is below recommended minimum 150
+2026-03-05 21:14:50,616 [ERROR] root: x MIN_BALANCE_USD=50.0 is below recommended minimum 150
+2026-03-05 21:15:11,003 [INFO] root: AI advisor: enabled mode=hybrid provider=auto min_base=58.0 cooldown=2s fail_open=True candidates=22 [gemini/gemini-3.1-pro-preview, gemini/gemini-3.1-flash-lite-preview, gemini/gemini-3-pro-preview, +19 more]
+2026-03-05 21:15:11,003 [INFO] root: === APEX BOT v12 | режим: paper ===
+2026-03-05 21:15:12,724 [INFO] root: server time synced: offset=-1550ms
+2026-03-05 21:15:13,433 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 21:15:16,268 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 21:15:17,653 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 21:15:19,363 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 21:20:22,221 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 21:22:26,310 [INFO] root: AI advisor: enabled mode=hybrid provider=auto min_base=58.0 cooldown=2s fail_open=True candidates=22 [gemini/gemini-3.1-pro-preview, gemini/gemini-3.1-flash-lite-preview, gemini/gemini-3-pro-preview, +19 more]
+2026-03-05 21:22:26,311 [INFO] root: === APEX BOT v12 | режим: paper ===
+2026-03-05 21:22:27,700 [INFO] root: server time synced: offset=-1471ms
+2026-03-05 21:22:28,596 [INFO] root: exchange_info: tick=0.1, step=0.001, minNotional=100.0
+2026-03-05 21:22:31,709 [INFO] root: preload_candles: 1h=200 15m=200 5m=300 1m=300
+2026-03-05 21:22:33,353 [INFO] root: L/S ratio skipped on TESTNET (endpoint unavailable)
+2026-03-05 21:22:34,981 [INFO] root: Fear&Greed: 22 (Extreme Fear)
+2026-03-05 21:22:36,717 [WARNING] root: WS reco: Connection timeout to host wss://fstream.binancefuture.com/stream?streams=btcusdt@kline_1m/btcusdt@kline_5m/btcusdt@kline_15m/btcusdt@kline_1h/btcusdt@aggTrade/btcusdt@depth20@100ms/btcusdt@bookTicker/btcusdt@markPrice@1s
+2026-03-05 21:22:36,719 [INFO] root: WS reconnect in 2s (attempt=1)
+2026-03-05 21:24:03,041 [INFO] root: Бот остановлен.

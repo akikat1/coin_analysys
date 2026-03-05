@@ -47,6 +47,7 @@ class RuntimeState:
     last_signal_ts: float = 0.0
     last_ai_note: str = ""
     last_ai_ts: float = 0.0
+    startup_sync_done: bool = True
 
 def save(ps: PersistentState) -> None:
     data = dataclasses.asdict(ps)

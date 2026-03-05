@@ -39,8 +39,7 @@ async def enter_trade(sig: Signal, ps: PersistentState, rs: RuntimeState) -> Pos
     stop_r = await rest_client._request("POST", "/fapi/v1/order", {
         "symbol": config.SYMBOL, "side": stop_side, "type": "STOP_MARKET",
         "stopPrice": exchange_info.round_price(lvl.stop),
-        "quantity": exchange_info.round_qty(filled_qty),
-        "reduceOnly": "true", "timeInForce": "GTE_GTC"
+        "closePosition": "true"
     })
     stop_id = int(stop_r.get("orderId", 0)) if stop_r and not stop_r.get("_ignored") else 0
 
@@ -49,7 +48,7 @@ async def enter_trade(sig: Signal, ps: PersistentState, rs: RuntimeState) -> Pos
         "symbol": config.SYMBOL, "side": stop_side, "type": "TAKE_PROFIT_MARKET",
         "stopPrice": exchange_info.round_price(lvl.tp1),
         "quantity": exchange_info.round_qty(lvl.qty_tp1),
-        "reduceOnly": "true", "timeInForce": "GTE_GTC"
+        "reduceOnly": "true"
     })
     tp1_id = int(tp1_r.get("orderId", 0)) if tp1_r and not tp1_r.get("_ignored") else 0
 
@@ -410,4 +409,3 @@ async def _get_live_position_snapshot() -> tuple[float, float]:
     qty = abs(float(row.get("positionAmt", 0) or 0))
     entry = float(row.get("entryPrice", 0) or 0)
     return qty, entry
-

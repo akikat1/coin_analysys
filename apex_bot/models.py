@@ -49,6 +49,7 @@ class SentimentData:
     label: str="Neutral"
     last_updated_ts: float=0.0
     available: bool=False
+    last_error: str=""
 
 @dataclass
 class MarketContext:

@@ -174,7 +174,7 @@ async def _restore_orders(ps: PersistentState) -> None:
 
 async def _ensure_protective_stop(ps: PersistentState) -> None:
     """
-    If position exists but no STOP order is tracked, place one reduce-only STOP_MARKET.
+    If position exists but no STOP order is tracked, place a protective STOP_MARKET.
     """
     pos = ps.position
     if not pos:
@@ -200,9 +200,7 @@ async def _ensure_protective_stop(ps: PersistentState) -> None:
             "side": side,
             "type": "STOP_MARKET",
             "stopPrice": stop_price,
-            "quantity": qty,
-            "reduceOnly": "true",
-            "timeInForce": "GTE_GTC",
+            "closePosition": "true",
         },
         signed=True,
     )

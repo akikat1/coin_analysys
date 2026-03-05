@@ -10,6 +10,7 @@ APEX Scalping Bot v12 — точка входа.
 import argparse
 import asyncio
 import os
+import re
 import signal
 import sys
 import time
@@ -63,6 +64,25 @@ async def startup_check(mode: str) -> bool:
         logging.error("   Запусти setup.bat (Windows) и заполни .env своими API ключами.")
         return False
     if mode in ("paper","live"):
+        if config.LEVERAGE < 1 or config.LEVERAGE > 125:
+            logging.error("x LEVERAGE=%s is out of range 1..125", config.LEVERAGE)
+            return False
+        if config.MAX_RISK_PER_TRADE_PCT < 0.001 or config.MAX_RISK_PER_TRADE_PCT > 0.05:
+            logging.error(
+                "x MAX_RISK_PER_TRADE_PCT=%s is out of range 0.001..0.05",
+                config.MAX_RISK_PER_TRADE_PCT,
+            )
+            return False
+        if config.MIN_BALANCE_USD < 150:
+            logging.error(
+                "x MIN_BALANCE_USD=%s is below recommended minimum 150",
+                config.MIN_BALANCE_USD,
+            )
+            return False
+        if config.TELEGRAM_COMMANDS_ENABLED and config.TELEGRAM_TOKEN:
+            if not re.match(r"^[0-9]+:[A-Za-z0-9_-]{20,}$", config.TELEGRAM_TOKEN):
+                logging.error("x TELEGRAM_TOKEN format looks invalid")
+                return False
         if not config.BINANCE_API_KEY or config.BINANCE_API_KEY == "your_api_key_here":
             logging.error("❌ BINANCE_API_KEY не заполнен в .env")
             logging.error("   Инструкция: README.md → раздел 'Получение API ключей'")
@@ -353,11 +373,14 @@ async def run_live() -> None:
 
     ps = state.load()
     _maybe_reset_daily(ps)
+    rs = RuntimeState()
+    rs.startup_sync_done = False
 
     await sync_server_time()
     await exchange_setup.setup()
     await exchange_info.load()
     await sync_on_startup(ps)
+    rs.startup_sync_done = True
     if ps.position:
         logging.info(f"🔄 ВОССТАНОВЛЕНА ПОЗИЦИЯ: {ps.position.direction} @ {ps.position.entry_price}")
 
@@ -378,10 +401,10 @@ async def run_live() -> None:
             else:
                 logging.warning("SMOKE TEST: не выполнен")
             await sync_on_startup(ps)
+            rs.startup_sync_done = True
 
     cs = CollectorState()
     await preload_candles(cs, config.SYMBOL)
-    rs = RuntimeState()
     stop_event = asyncio.Event()
     last_logged_rejection = {"value": ""}
 
@@ -391,6 +414,9 @@ async def run_live() -> None:
                 if _kill_switch_triggered():
                     logging.warning("Kill switch detected (%s). Stopping.", STOP_TRADING_FILE)
                     stop_event.set()
+                    continue
+                if not rs.startup_sync_done:
+                    await asyncio.sleep(0.2)
                     continue
                 _maybe_reset_daily(ps)
                 for tf in ("1h", "15m", "5m", "1m"):

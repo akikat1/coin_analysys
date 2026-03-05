@@ -51,12 +51,25 @@ async def run(ps, rs, mode: str, stop_event: asyncio.Event):
         t.add_row("ADX (15m):",   f"{ind15.adx:.1f}" if ind15 and ind15.adx else "—")
         t.add_row("RSI (15m):",   f"{ind15.rsi:.1f}" if ind15 and ind15.rsi else "—")
         t.add_row("Funding:",     f"{rs.micro.funding_rate:.6f}")
+        if config.TESTNET:
+            ls_view = "[dim]N/A (testnet)[/dim]"
+        else:
+            ls_view = f"{rs.context.ls_ratio:.2f}"
+            if rs.context.ls_warning:
+                ls_view += " [yellow]warn[/yellow]"
+        t.add_row("L/S Ratio:", ls_view)
         t.add_row("OBI:",         f"{rs.micro.obi:+.3f}")
         t.add_row("CVD 5m:",      f"{rs.micro.cvd_300s:+.4f}")
         t.add_row("Spread:",      f"{rs.micro.spread_pct*100:.4f}%")
         t.add_row("Mark Price:",  f"{rs.micro.mark_price:.2f}")
         sent = rs.sentiment
-        t.add_row("Fear&Greed:",  _sentiment_color(sent.value) if sent.available else "[dim]—[/dim]")
+        if sent.available:
+            sent_view = _sentiment_color(sent.value)
+        elif sent.last_error:
+            sent_view = f"[dim]N/A ({sent.last_error[:48]})[/dim]"
+        else:
+            sent_view = "[dim]N/A[/dim]"
+        t.add_row("Fear&Greed:", sent_view)
         t.add_row("Last Signal:", _rejection_color(rs.last_rejection_reason))
         if config.AI_ENABLED:
             ai_text = rs.last_ai_note if rs.last_ai_note else "waiting for first AI cycle"

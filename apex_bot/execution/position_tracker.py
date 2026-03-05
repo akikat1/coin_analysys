@@ -63,8 +63,7 @@ async def _handle_tp1_filled(fill_price: float, ps: PersistentState, rs: Runtime
         new_stop_r = await rest_client._request("POST", "/fapi/v1/order", {
             "symbol": config.SYMBOL, "side": stop_side, "type": "STOP_MARKET",
             "stopPrice": exchange_info.round_price(pos.avg_fill_price),
-            "quantity": exchange_info.round_qty(pos.qty_remaining),
-            "reduceOnly": "true", "timeInForce": "GTE_GTC"
+            "closePosition": "true",
         })
         if new_stop_r and not new_stop_r.get("_ignored"):
             pos.stop_order_id = int(new_stop_r.get("orderId", 0))
@@ -73,7 +72,7 @@ async def _handle_tp1_filled(fill_price: float, ps: PersistentState, rs: Runtime
         "symbol": config.SYMBOL, "side": stop_side, "type": "TAKE_PROFIT_MARKET",
         "stopPrice": exchange_info.round_price(pos.tp2_price),
         "quantity": exchange_info.round_qty(pos.qty_tp2),
-        "reduceOnly": "true", "timeInForce": "GTE_GTC"
+        "reduceOnly": "true"
     })
     if tp2_r and not tp2_r.get("_ignored"):
         pos.tp2_order_id = int(tp2_r.get("orderId", 0))
@@ -96,7 +95,7 @@ async def _handle_tp2_filled(fill_price: float, ps: PersistentState, rs: Runtime
         "symbol": config.SYMBOL, "side": stop_side, "type": "TAKE_PROFIT_MARKET",
         "stopPrice": exchange_info.round_price(pos.tp3_price),
         "quantity": exchange_info.round_qty(pos.qty_remaining),
-        "reduceOnly": "true", "timeInForce": "GTE_GTC"
+        "reduceOnly": "true"
     })
     if tp3_r and not tp3_r.get("_ignored"):
         pos.tp3_order_id = int(tp3_r.get("orderId", 0))
@@ -287,13 +286,10 @@ async def update_trailing_stop(ps: PersistentState, rs: RuntimeState) -> None:
             "side": stop_side,
             "type": "STOP_MARKET",
             "stopPrice": exchange_info.round_price(pos.stop_price),
-            "quantity": exchange_info.round_qty(pos.qty_remaining),
-            "reduceOnly": "true",
-            "timeInForce": "GTE_GTC",
+            "closePosition": "true",
         })
         if r and not r.get("_ignored"):
             pos.stop_order_id = int(r.get("orderId", pos.stop_order_id))
 
     import state
     state.save(ps)
-

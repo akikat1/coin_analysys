@@ -151,6 +151,10 @@ async def evaluate_signal(ps: PersistentState, rs: RuntimeState) -> Signal | Non
             rs.last_ai_note = f"AI skip before signal: {reason}"
 
     rs.last_score_breakdown = None
+    if not getattr(rs, "startup_sync_done", True):
+        _reject("STARTUP_SYNC")
+        return None
+
     now_ms = int(time.time() * 1000)
     if not config.BACKTEST_MODE:
         if now_ms - rs.micro.last_updated_ms > config.MAX_MICROSTRUCTURE_STALENESS_MS:
